@@ -253,11 +253,11 @@ install numpy and sklearn!
  git clone
    
     $ cd ~
-    $ git clone https://github.com/nabihandres/RADAR_Cluster-and-tracking.git
+    $ git clone https://github.com/JisangKang/Radar_Tracking.git
    
  catkin make
    
-    $ cd ~/RADAR_Cluster-and-tracking/radar_tracking
+    $ cd ~/Radar_Tracking/radar_tracking
     $ catkin_make
     $ source devel/setup.bash
    
