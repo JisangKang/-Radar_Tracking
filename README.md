@@ -1,5 +1,14 @@
 # RADAR Tracking
 ## Summary
+
+This RADAR tracking is trace the point of object by using Clustering.   
+This Tracking algorithm can be used for another sensor(camera, lidar), if the sensor imports point data.   
+There are 2 versions of Radar Tracking.   
+The process of each Radar Tracking is explained in detail.   
+The experiments of people moving case is carried out.   
+There is a way to run the Radar Tracking with ROS.   
+
+
 ## Contents
 
 1. [Radar Tracking ver.1](#1-radar-tracking-ver1)
@@ -8,9 +17,8 @@
 4. [Running on ROS](#4-running-on-ros)
 5. [Appnedices](#5-appendices)
 
-
-
-
+---
+---
 ## 1. Radar Tracking ver.1
 Radar Tracking version 1 is composed of two parts.     
 First part: velocity is obtained from point data of radar by Clustering.    
@@ -31,28 +39,17 @@ Second part: position and velocity are filtered by Moving average filtering.
  *6. Obtain the velocity*   
 
 
-#### 1.1.2 Flowchart
- 
- <p align="center"><img src="https://user-images.githubusercontent.com/97038348/166400471-83d88f2a-ff8e-434e-b5ca-2c000356aa05.PNG" width="60%" height="60%"/>
- <p align="center"><img src="https://user-images.githubusercontent.com/97038348/166400476-17d1bc53-cd59-4e24-9c0e-f6224e7b76f4.PNG" width="60%" height="60%"/>
-
-
- There are two Clustering. The function of **'Clustering'** is detecting objects and finding the center of each object. The function of **'ClusteringVel'** is   identifying the same objects in current objects and past objects and calculating the velocity.
-
- 
-   
-   
-
- 
  ### 1.2 Filtering position and velocity
   #### 1.2.1 Window set diagram
  
 <img src="https://user-images.githubusercontent.com/97038348/167054433-f13742da-ad87-43cc-bdce-950b1c4ed50c.PNG" width="90%" height="90%"/>
 
+Window set is used for moving average filtering.   
 The main concept for filtering is **"window"**. The position and velocity obtained in the previous process become an one element of window.    
 The number of elements in window is **"size of window"**.   
 **"Skip count"** means number of times that have not been updated consecutively. This number is used for deleting the window.  
  The **"window set"** consists of windows, and the number of windows is equal to the number of objects currently observed.
+ 
 #### 1.2.2 Formula of moving average filter
 <img src="https://user-images.githubusercontent.com/97038348/167053294-ee42ca01-9129-4031-84b3-cccb81380603.PNG" width="80%" height="80%"/>
  
@@ -60,16 +57,22 @@ The number of elements in window is **"size of window"**.
   
   *# You can select one by adjusting the PARAMETER in RadarTrackingVer1.py*
 
-#### 1.2.3 Flowchart
-<p align="center"><img src="https://user-images.githubusercontent.com/97038348/166400479-eb2387c2-22e9-487c-b6cc-180fd53db2a8.PNG" width="60%" height="60%"/>
-<p align="center"><img src="https://user-images.githubusercontent.com/97038348/166400483-b2fc2601-7bb3-4e16-aa74-e8a782a9ac6f.PNG" width="60%" height="60%"/>
+
+ ### 1.3 Flowchart
  
-When the new data(position and velocity) is obtained, the new data is compared to the first element of windows in window set by **'ClusteringFilter'**. If the matched window is founded, the new data becomes an first element of that window. Else, new window is created and the new data becomes an first element of the new window. Because Noise always makes new window, window that have not been updated for a long time will be deleted by counting the number of times that have not been updated. The window of object being out of detecting range is also deleted.
+ <img src="https://user-images.githubusercontent.com/97038348/169218852-e295b242-b9fd-42cf-8c27-a1d8741b9ef5.png" width="50%" height="50%"/>
+ 
+  There are three Clustering. The function of **'Clustering'** is detecting objects and finding the center of each object. The function of **'ClusteringVel'** is   identifying the same objects in current objects and past objects and calculating the velocity. The position and velocity of current point is assigned to the *'Data'*.
+
+ 
+When the data(position and velocity) is obtained, the data is compared to the first element of windows in window set by **'ClusteringFilter'**. If the matched window is founded, the data becomes an first element of that window. *'position and velocity of Object'* is obtained by applying a moving average filter to the window. Else, new window is created and the new data becomes an first element of the new window.    
+
+Because Noise always makes new window, window that have not been updated for a long time will be deleted by counting the skip number. The window of object being out of detecting range is also deleted.
  
  
- ### 1.3 PARAMETERS
+ ### 1.4 PARAMETERS
  
- #### 1.3.1 Clustering parameters
+ #### 1.4.1 Clustering parameters
 
  * **Clustering**  
    eps = size of object  
@@ -77,12 +80,12 @@ When the new data(position and velocity) is obtained, the new data is compared t
  * **ClusteringVel**  
    eps = The range of object moving for time difference + Radar Error    
    min_samples = 1  &nbsp;&nbsp;&nbsp;*# ClusteringVel judges whether it's the same object or not. So, 1 is enough.* 
- * **ClusteringFilter**
+ * **ClusteringFilter**   
    eps = The range of object moving for time difference + Radar Error    
-   min_samples = 1  &nbsp;&nbsp;&nbsp;*# ClusteringFilter judges whether it's the same object or not. So, 1 is enough.*    
+   min_samples = 2  &nbsp;&nbsp;&nbsp;    
   
  
- #### 1.3.2 parameter setting
+ #### 1.4.2 parameter setting
  
  you have to set the parameters depending on what you want to detect.   
   &nbsp;&nbsp;&nbsp;&nbsp; *# You can set these values by adjusting the PARAMETER in RadarTrackingVer1.py* 
@@ -101,11 +104,12 @@ When the new data(position and velocity) is obtained, the new data is compared t
  * **weight** = weight for Current-Weighted moving average
  
  
- 
+ ---
+ ---
 ## 2. Radar Tracking ver.2
  
  Radar Tracking version 2 is composed of two parts.     
- First part: the point data from radar is filtered by Moving average filtering..    
+ First part: the point data from radar is filtered by Moving average filtering.    
  Because radar get the point data randomly from object, the position from radar has noise and radar error.   
  Therefore we need filtering.   
  Second part: velocity is obtained from filtered position.   
@@ -123,6 +127,7 @@ When the new data(position and velocity) is obtained, the new data is compared t
  
  <img src="https://user-images.githubusercontent.com/97038348/167997924-78b74675-0a16-4a8c-94a0-98842ae0bf71.PNG" width="90%" height="90%"/>
  
+ Window set is used for moving average filtering.   
  The main concept for filtering is **"window"**. The position obtained in the previous process become an one element of window.    
 The number of elements in window is **"size of window"**.   
 **"Skip count"** means number of times that have not been updated consecutively. This number is used for deleting the window.  
@@ -142,31 +147,40 @@ The number of elements in window is **"size of window"**.
  
  <img src="https://user-images.githubusercontent.com/97038348/167997927-8556de63-b46e-4e26-b2e7-429ee3218f75.PNG" width="90%" height="90%"/>
  
- #### 2.2.2 Flowchart
+ Velocity Window set is used for calculating the velocity.    
+ **"Velocity window"** has only two elements(first-current,second-past).    
+ Each element is composed of position, velocity and time.    
  
- ### 2.3 PARAMETERS
-  #### 2.3.1 Clustering parameters
+ 
+ ### 2.3 Flowchart
+ 
+ <img src="https://user-images.githubusercontent.com/97038348/169193252-948b5bb9-5d89-4ec1-8f90-f2f1fb12e5c2.png" width="50%" height="50%"/>
+ 
+ There are two Clustering. The function of **'Clustering'** is detecting objects and finding the center of each object. When the center points of object is obtained, the center points is compared to the first element of windows in window set by **'ClusteringFilter'**. If the matched window is founded, the center point becomes an first element of that window. Else, new window is created and the center point becomes an first element of the new window. When window is updated, skip count becomes 0 and moving average filter is applied to the window. The results of filtering become an element of velocity window. *'position and velocity of Object'* is obtained by comparing two element in velocity window.     
+
+Because Noise always makes new window, window and velocity window that have not been updated for a long time will be deleted by counting the skip number. The window of object being out of detecting range also could be deleted. 
+
+ 
+ ### 2.4 PARAMETERS
+  #### 2.4.1 Clustering parameters
 
  * **Clustering**  
    eps = size of object  
    min_samples = 2  &nbsp;&nbsp;&nbsp;&nbsp;*# The minimum number of points for clustering. if you increase this number, accuracy would increase.*
- * **ClusteringVel**  
+  
+ * **ClusteringFilter**   
    eps = The range of object moving for time difference + Radar Error    
-   min_samples = 1  &nbsp;&nbsp;&nbsp;*# ClusteringVel judges whether it's the same object or not. So, 1 is enough.* 
- * **ClusteringFilter**
-   eps = The range of object moving for time difference + Radar Error    
-   min_samples = 1  &nbsp;&nbsp;&nbsp;*# ClusteringFilter judges whether it's the same object or not. So, 1 is enough.*    
+   min_samples = 2  &nbsp;&nbsp;&nbsp;    
   
  
- #### 2.3.2 parameter setting
+ #### 2.4.2 parameter setting
  
  you have to set the parameters depending on what you want to detect.   
   &nbsp;&nbsp;&nbsp;&nbsp; *# You can set these values by adjusting the PARAMETER in RadarTrackingVer2.py* 
  
- <img src="https://user-images.githubusercontent.com/97038348/167069487-bbfe54b3-4f10-401d-9804-f9c4521d514e.png" width="30%" height="30%"/>
+ <img src="https://user-images.githubusercontent.com/97038348/168715439-9b1a7074-5f56-476c-8430-5cb68311338d.png" width="30%" height="30%"/>
 
  * **objectSize** = eps for Clustering
- * **objectMovingRange** = eps for ClusteringVel
  * **filteringRange** = eps for ClusteringFilter
  * **sizeOfWindow** = number of elements in window
  * **maxNumOfSkip** = the number of maximum skip count of window. If skip count over this number, that window will be deleted.
@@ -176,13 +190,16 @@ The number of elements in window is **"size of window"**.
    * 2: Current-Weighted moving average
  * **weight** = weight for Current-Weighted moving average
  
- 
+ ---
+ ---
  ## 3. Experiments
  
- Radar Tracking was tested on people moving in the Y-axis direction.
+ Radar Tracking was tested on people moving along the Y-axis direction.
 
  
- <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168016836-3ccce287-880f-4b96-bf47-f4c3e0060de5.png" width="60%" height="100%"/>
+ <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168016836-3ccce287-880f-4b96-bf47-f4c3e0060de5.png" width="35%" height="60%"/>
+  <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168714663-ffe56093-8c5d-48ff-9e46-492f182d3403.gif" width="35%" height="60%"/>
+  
  
  ### 3.1 Radar Tracking ver.1
   * X position
@@ -199,29 +216,70 @@ The number of elements in window is **"size of window"**.
   
  ### 3.2 Radar Tracking ver.2
    
- ### 3.3 Experiment Data
+ * X position
+  <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168711842-a9fbcba9-f34d-4c29-a12b-833fda974aca.png" width="120%" height="120%"/>
    
+   * Y position
+  <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168711846-fbc8aee9-52b5-4bc4-970f-9eda41c599ef.png" width="100%" height="60%"/>
+   
+   * X velocity
+  <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168711850-a2f7f042-df1d-4641-9deb-9ae5601c19a1.png" width="100%" height="60%"/>
+   
+   * Y veloctiy
+  <p align="center"><img src="https://user-images.githubusercontent.com/97038348/168711857-db99ed88-dcdb-4e70-8d72-d01bcd4f6636.png" width="100%" height="60%"/>
+   
+ ### 3.3 Experiment Data
+   #### .csv and .bag
+   <img src="https://user-images.githubusercontent.com/97038348/168712909-59a1d2a4-b2ef-4729-b087-0d0ca54f7fb0.png" width="50%" height="50%"/>
+   You can find the .bag and .csv files in /experiment
+    
+   #### Reference
+   https://colab.research.google.com/drive/1FAUvLSvKU4EWGs6MzC3Q67TUwbQ0ep9M#scrollTo=D06d4Hf05jRH
+   https://colab.research.google.com/drive/1ElcqtUOXyF-yy6ymjZjCCcIXuI_Uwfsk#scrollTo=iNH4_roKjgVh
  
 ## 4. Running on ROS
- ## 3.1 Set up
+   TI mmWave's IWR6843ISK is used for this radar tracking.   
+    <img src="https://user-images.githubusercontent.com/97038348/169230164-4c639ac4-2d81-40c8-93e9-5b02415d1502.png" width="30%" height="30%"/>
+   
+   
+ ### 4.1 Set up
 
 install numpy and sklearn!
 
     $ sudo apt install python3-pip
     $ sudo pip3 install numpy
     $ sudo pip3 install scikit-learn
+   
+ git clone
+   
+    $ cd ~
+    $ git clone https://github.com/nabihandres/RADAR_Cluster-and-tracking.git
+   
+ catkin make
+   
+    $ cd ~/RADAR_Cluster-and-tracking/radar_tracking
+    $ catkin_make
+    $ source devel/setup.bash
+   
+ add dialout to have acess to the serial ports on Linux 
+   
+    $ sudo adduser <your_username> dialout
+   
+ allow permission to serial port. (with connecting radar by usb port)
+   
+    $ sudo chmod a+rw /dev/ttyUSB0
  
- ## 3.2 Run the Radar Tracking
+ ### 4.2 Run the Radar Tracking
  
-
- 
-launch and get the data from radar
+launch the ti mmwave ros package and get the data from radar
 
     $ roslaunch ti_mmwave_rospkg 6843_multi_3d_0.launch
     
-rosrun the Clustering.py
+rosrun the RadarTracking.py
 
-    $ rosrun ti_mmwave_rospkg Clustering.py
+    $ rosrun ti_mmwave_rospkg RadarTrackingVer1.py
+    or
+    $ rosrun ti_mmwave_rospkg RadarTrackingVer2.py
     
 RadarTracking.py subscribe following topic
 
@@ -237,11 +295,9 @@ RadarTracking.py subscribe following topic
         header.stamp.nsecs - nano second
         
         
-RadarTracking.py publish following topic   
- **/object_tracking** is from Filtering Algorithm   
- **/object_velocity** is from Clustering Algorithm   
+RadarTracking.py publish following topic     
     
-    Published Topic : /object_tracking, /object_velocity
+    Published Topic : /object_tracking
     
     msg Type : object_msgs/Objects
  
@@ -249,7 +305,7 @@ RadarTracking.py publish following topic
  
     msg Type : Object_msgs/Object
  
-        name - object name in Window Set
+        name - object number in Window Set
         position - [X, Y, Z]  
                     X: x-coordinate of the object
                     Y: y-coordinate of the object
@@ -265,8 +321,8 @@ RadarTracking.py publish following topic
 
     
 ### Reference
-https://github.com/nabihandres/RADAR_Coop_2022/edit/main/README.md
-https://dev.ti.com/tirex/explore/node?node=AKeUoo3vxtyjSnRGQDBVLg__VLyFKFf__LATEST
+https://github.com/nabihandres/RADAR_Coop_2022/edit/main/README.md   
+https://dev.ti.com/  (Explore/ Resource Explorer/ Software/ mmWave Sensors/ Industrial Toolbox/ Labs/ Robotics/ ROS Driver)
     
  
  
@@ -315,4 +371,3 @@ A moving average is a calculation to analyze data points by creating a seires of
  
  #### Reference
 https://en.wikipedia.org/wiki/Moving_average
-
